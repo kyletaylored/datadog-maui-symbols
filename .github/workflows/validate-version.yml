@@ -1,0 +1,54 @@
+name: Validate Version
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: 'Release tag to validate (e.g., v0.1.0)'
+        required: true
+        type: string
+
+jobs:
+  validate:
+    name: Validate Version Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate version format
+        run: |
+          TAG="${{ inputs.release_tag }}"
+
+          # Check if tag starts with 'v'
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version format: $TAG"
+            echo "Expected format: vX.Y.Z (e.g., v0.1.0, v1.2.3)"
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+          echo "Valid version format: $TAG"
+          echo "Version number: $VERSION"
+
+      - name: Check if release exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ inputs.release_tag }}"
+
+          # Check if the release exists
+          if ! gh release view "$TAG" --repo ${{ github.repository }} > /dev/null 2>&1; then
+            echo "Release $TAG does not exist"
+            echo "Available releases:"
+            gh release list --repo ${{ github.repository }} --limit 10
+            exit 1
+          fi
+
+          echo "Release $TAG exists"
+
+      - name: Validation summary
+        run: |
+          echo "# Version Validation Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Tag**: ${{ inputs.release_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Format**: Valid" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release**: Exists" >> $GITHUB_STEP_SUMMARY
