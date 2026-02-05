@@ -1,4 +1,4 @@
-# Datadog.MAUI.SymbolsUpload - Native .NET Plugin Design
+# Datadog.MAUI.Symbols - Native .NET Plugin Design
 
 > **📋 Historical Document**: This is the original design document created during the planning phase. For current documentation, see [README.md](../../README.md). Some implementation details may have evolved during development.
 
@@ -6,7 +6,7 @@
 
 **Current State**: The `Datadog.MAUI.Symbols` plugin wraps the `datadog-ci` CLI via `npx`, requiring Node.js/npm as a dependency.
 
-**Proposed Solution**: Build a native .NET plugin (`Datadog.MAUI.SymbolsUpload`) that directly calls the Datadog Symbols Intake API, eliminating the Node.js dependency and providing better integration with the .NET ecosystem.
+**Proposed Solution**: Build a native .NET plugin (`Datadog.MAUI.Symbols`) that directly calls the Datadog Symbols Intake API, eliminating the Node.js dependency and providing better integration with the .NET ecosystem.
 
 ## Rationale
 
@@ -41,7 +41,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Datadog.MAUI.SymbolsUpload.csproj (NuGet Package)         │
+│  Datadog.MAUI.Symbols.csproj (NuGet Package)         │
 ├─────────────────────────────────────────────────────────────┤
 │  MSBuild Tasks (C#)                                         │
 │  ├── UploadSymbolsTask.cs       (Main task)                │
@@ -61,7 +61,7 @@
 │  └── UploadResult.cs                                        │
 ├─────────────────────────────────────────────────────────────┤
 │  MSBuild Targets                                            │
-│  └── build/Datadog.MAUI.SymbolsUpload.targets              │
+│  └── build/Datadog.MAUI.Symbols.targets              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -633,7 +633,7 @@ namespace Datadog.MAUI.Symbols
 
 ### Phase 5: MSBuild Targets Integration (Week 3)
 
-#### 5.1 Datadog.MAUI.SymbolsUpload.targets
+#### 5.1 Datadog.MAUI.Symbols.targets
 
 ```xml
 <Project>
@@ -651,10 +651,10 @@ namespace Datadog.MAUI.Symbols
   </PropertyGroup>
 
   <!-- Import task assembly -->
-  <UsingTask TaskName="Datadog.MAUI.SymbolsUpload.UploadSymbolsTask"
-             AssemblyFile="$(MSBuildThisFileDirectory)\..\lib\netstandard2.0\Datadog.MAUI.SymbolsUpload.dll" />
-  <UsingTask TaskName="Datadog.MAUI.SymbolsUpload.GenerateBuildIdTask"
-             AssemblyFile="$(MSBuildThisFileDirectory)\..\lib\netstandard2.0\Datadog.MAUI.SymbolsUpload.dll" />
+  <UsingTask TaskName="Datadog.MAUI.Symbols.UploadSymbolsTask"
+             AssemblyFile="$(MSBuildThisFileDirectory)\..\lib\netstandard2.0\Datadog.MAUI.Symbols.dll" />
+  <UsingTask TaskName="Datadog.MAUI.Symbols.GenerateBuildIdTask"
+             AssemblyFile="$(MSBuildThisFileDirectory)\..\lib\netstandard2.0\Datadog.MAUI.Symbols.dll" />
 
   <!-- Generate Build ID (before compilation) -->
   <Target Name="DatadogGenerateBuildId"
@@ -725,7 +725,7 @@ namespace Datadog.MAUI.Symbols
 
 #### 6.1 Unit Tests
 
-Create `Datadog.MAUI.SymbolsUpload.Tests` project:
+Create `Datadog.MAUI.Symbols.Tests` project:
 
 ```csharp
 [TestClass]
@@ -822,7 +822,7 @@ Mock HTTP server to test actual API calls
 
 2. Install native plugin:
    ```bash
-   dotnet add package Datadog.MAUI.SymbolsUpload
+   dotnet add package Datadog.MAUI.Symbols
    ```
 
 3. Update properties (rename prefix):
@@ -874,7 +874,7 @@ Mock HTTP server to test actual API calls
 
 ## Next Steps
 
-1. Create project structure in `Datadog.MAUI.SymbolsUpload/`
+1. Create project structure in `Datadog.MAUI.Symbols/`
 2. Implement Phase 1 (API Client)
 3. Add comprehensive tests
 4. Iterate based on testing feedback

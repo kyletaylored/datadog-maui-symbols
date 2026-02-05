@@ -59,11 +59,6 @@
                 HorizontalOptions="Center" />
 
             <Label
-                x:Name="ConfigurationLabel"
-                FontSize="14"
-                HorizontalOptions="Center" />
-
-            <Label
                 x:Name="BuildIdLabel"
                 FontSize="12"
                 HorizontalOptions="Center"

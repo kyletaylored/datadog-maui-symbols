@@ -1,6 +1,6 @@
 # Planning Documents
 
-This directory contains historical planning documents from the initial design phase of the Datadog.MAUI.SymbolsUpload plugin.
+This directory contains historical planning documents from the initial design phase of the Datadog.MAUI.Symbols plugin.
 
 ## Contents
 

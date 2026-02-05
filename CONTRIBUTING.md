@@ -1,6 +1,6 @@
-# Contributing to Datadog.MAUI.SymbolsUpload
+# Contributing to Datadog.MAUI.Symbols
 
-Thank you for your interest in contributing to the Datadog.MAUI.SymbolsUpload plugin!
+Thank you for your interest in contributing to the Datadog.MAUI.Symbols plugin!
 
 ## Table of Contents
 
@@ -22,12 +22,12 @@ This project adheres to the Datadog Code of Conduct. By participating, you are e
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/datadog-maui-symbols-upload.git
-   cd datadog-maui-symbols-upload
+   git clone https://github.com/YOUR-USERNAME/datadog-maui-symbols.git
+   cd datadog-maui-symbols
    ```
 3. Add the upstream repository as a remote:
    ```bash
-   git remote add upstream https://github.com/DataDog/datadog-maui-symbols-upload.git
+   git remote add upstream https://github.com/kyletaylored/datadog-maui-symbols.git
    ```
 
 ## Development Setup
@@ -46,7 +46,7 @@ This project adheres to the Datadog Code of Conduct. By participating, you are e
 make build
 
 # Or manually
-dotnet build Datadog.MAUI.SymbolsUpload/Datadog.MAUI.SymbolsUpload.csproj -c Release
+dotnet build Datadog.MAUI.Symbols/Datadog.MAUI.Symbols.csproj -c Release
 ```
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development instructions.
@@ -62,6 +62,7 @@ git checkout -b feature/your-feature-name
 ```
 
 Use descriptive branch names:
+
 - `feature/add-android-support` for new features
 - `fix/upload-timeout` for bug fixes
 - `docs/improve-readme` for documentation
@@ -87,6 +88,7 @@ Add dry-run mode for testing configuration
 ```
 
 Format:
+
 - Use present tense ("Add feature" not "Added feature")
 - Use imperative mood ("Move cursor to..." not "Moves cursor to...")
 - First line should be 50-72 characters
@@ -109,12 +111,13 @@ make test-int
 
 ### Writing Tests
 
-- Add unit tests in `Datadog.MAUI.SymbolsUpload.Tests/`
+- Add unit tests in `Datadog.MAUI.Symbols.Tests/`
 - Follow existing test structure and naming conventions
 - Test both success and failure scenarios
 - Use descriptive test method names
 
 Example:
+
 ```csharp
 [Fact]
 public void UploadSymbolsTask_WithValidMetadata_ShouldSucceed()
@@ -155,6 +158,7 @@ make sample-run-ios
 ### Creating a Pull Request
 
 1. Push your changes to your fork:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -223,7 +227,7 @@ public async Task<UploadResult> UploadAsync(UploadRequest request)
 - Core logic: `Core/`
 - Models: `Models/`
 - MSBuild tasks: `Tasks/`
-- Tests: `Datadog.MAUI.SymbolsUpload.Tests/`
+- Tests: `Datadog.MAUI.Symbols.Tests/`
 
 ## Questions
 
@@ -236,6 +240,7 @@ public async Task<UploadResult> UploadAsync(UploadRequest request)
 ### Reporting Bugs
 
 Create an issue with:
+
 - Clear description of the problem
 - Steps to reproduce
 - Expected vs actual behavior
@@ -245,6 +250,7 @@ Create an issue with:
 ### Suggesting Features
 
 Create an issue with:
+
 - Clear description of the feature
 - Use case and motivation
 - Proposed implementation (if any)
@@ -254,7 +260,7 @@ Create an issue with:
 
 For maintainers:
 
-1. Update version in `Datadog.MAUI.SymbolsUpload.csproj`
+1. Update version in `Datadog.MAUI.Symbols.csproj`
 2. Update CHANGELOG.md with release date
 3. Create git tag: `git tag v0.1.0`
 4. Push tag: `git push origin v0.1.0`
@@ -268,4 +274,4 @@ By contributing, you agree that your contributions will be licensed under the Ap
 
 ---
 
-Thank you for contributing to Datadog.MAUI.SymbolsUpload!
+Thank you for contributing to Datadog.MAUI.Symbols!

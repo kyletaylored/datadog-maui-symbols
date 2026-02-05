@@ -6,11 +6,11 @@
 
 - [ ] Create solution structure
   ```bash
-  dotnet new classlib -n Datadog.MAUI.SymbolsUpload -f netstandard2.0
-  dotnet new xunit -n Datadog.MAUI.SymbolsUpload.Tests
-  dotnet new sln -n Datadog.MAUI.SymbolsUpload
-  dotnet sln add Datadog.MAUI.SymbolsUpload/Datadog.MAUI.SymbolsUpload.csproj
-  dotnet sln add Datadog.MAUI.SymbolsUpload.Tests/Datadog.MAUI.SymbolsUpload.Tests.csproj
+  dotnet new classlib -n Datadog.MAUI.Symbols -f netstandard2.0
+  dotnet new xunit -n Datadog.MAUI.Symbols.Tests
+  dotnet new sln -n Datadog.MAUI.Symbols
+  dotnet sln add Datadog.MAUI.Symbols/Datadog.MAUI.Symbols.csproj
+  dotnet sln add Datadog.MAUI.Symbols.Tests/Datadog.MAUI.Symbols.Tests.csproj
   ```
 
 - [ ] Add NuGet dependencies
@@ -138,7 +138,7 @@
 
 ## Phase 7: MSBuild Targets (Day 8)
 
-- [ ] Create `build/Datadog.MAUI.SymbolsUpload.targets`
+- [ ] Create `build/Datadog.MAUI.Symbols.targets`
   - [ ] Define default properties
   - [ ] UsingTask declarations
   - [ ] DatadogGenerateBuildId target (BeforeTargets="CoreCompile")
@@ -147,7 +147,7 @@
   - [ ] Debug/Release conditional execution
   - [ ] Property passing to tasks
 
-- [ ] Create `buildTransitive/Datadog.MAUI.SymbolsUpload.targets`
+- [ ] Create `buildTransitive/Datadog.MAUI.Symbols.targets`
   - [ ] Same as build/ for transitive references
 
 - [ ] Test targets integration

@@ -12,11 +12,10 @@ public partial class MainPage : ContentPage
 
 	private void LoadBuildConfiguration()
 	{
-		ServiceNameLabel.Text = $"Service: {BuildInfo.ServiceName}";
-		VersionLabel.Text = $"Version: {BuildInfo.Version}";
-		VariantLabel.Text = $"Variant: {BuildInfo.Variant}";
-		ConfigurationLabel.Text = $"Configuration: {BuildInfo.Configuration}";
-		BuildIdLabel.Text = $"Build ID: {BuildInfo.BuildId}";
+		ServiceNameLabel.Text = $"Service: {Datadog.MAUI.Symbols.DatadogBuildInfo.ServiceName}";
+		VersionLabel.Text = $"Version: {Datadog.MAUI.Symbols.DatadogBuildInfo.Version}";
+		VariantLabel.Text = $"Variant: {Datadog.MAUI.Symbols.DatadogBuildInfo.Variant}";
+		BuildIdLabel.Text = $"Build ID: {Datadog.MAUI.Symbols.DatadogBuildInfo.BuildId}";
 	}
 
 	private void OnCounterClicked(object? sender, EventArgs e)

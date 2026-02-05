@@ -77,7 +77,7 @@ captures/
 local.properties
 build/
 # Exception: MSBuild SDK packages need their build/ directory
-!Datadog.MAUI.SymbolsUpload/build/
+!Datadog.MAUI.Symbols/build/
 
 # Visual Studio / Rider
 .vscode/

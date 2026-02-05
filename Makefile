@@ -1,11 +1,11 @@
-# Datadog.MAUI.SymbolsUpload Makefile
+# Datadog.MAUI.Symbols Makefile
 # Common build and test commands
 
 .PHONY: help build test pack clean restore sample-android sample-ios sample-build sample-run-android sample-run-ios sample-publish-android sample-publish-ios sample-publish-ios-device sample-install-android sample-install-ios sample-find-symbols all
 
 # Default target
 help:
-	@echo "Datadog.MAUI.SymbolsUpload - Available Commands"
+	@echo "Datadog.MAUI.Symbols - Available Commands"
 	@echo ""
 	@echo "Build & Test:"
 	@echo "  make build          - Build the plugin"
@@ -41,8 +41,8 @@ help:
 
 # Build the plugin
 build:
-	@echo "Building Datadog.MAUI.SymbolsUpload..."
-	dotnet build Datadog.MAUI.SymbolsUpload/Datadog.MAUI.SymbolsUpload.csproj -c Release
+	@echo "Building Datadog.MAUI.Symbols..."
+	dotnet build Datadog.MAUI.Symbols/Datadog.MAUI.Symbols.csproj -c Release
 
 # Run all tests
 test:
@@ -62,10 +62,10 @@ test-int:
 # Create NuGet package
 pack:
 	@echo "Creating NuGet package..."
-	dotnet pack Datadog.MAUI.SymbolsUpload/Datadog.MAUI.SymbolsUpload.csproj -c Release
+	dotnet pack Datadog.MAUI.Symbols/Datadog.MAUI.Symbols.csproj -c Release
 	@echo ""
 	@echo "Package created at:"
-	@ls -lh Datadog.MAUI.SymbolsUpload/bin/Release/*.nupkg | tail -1
+	@ls -lh Datadog.MAUI.Symbols/bin/Release/*.nupkg | tail -1
 
 # Build sample app for all platforms
 sample-build: sample-android sample-ios
@@ -233,8 +233,8 @@ sample-clean:
 clean:
 	@echo "Cleaning all build outputs..."
 	dotnet clean
-	rm -rf Datadog.MAUI.SymbolsUpload/bin Datadog.MAUI.SymbolsUpload/obj
-	rm -rf Datadog.MAUI.SymbolsUpload.Tests/bin Datadog.MAUI.SymbolsUpload.Tests/obj
+	rm -rf Datadog.MAUI.Symbols/bin Datadog.MAUI.Symbols/obj
+	rm -rf Datadog.MAUI.Symbols.Tests/bin Datadog.MAUI.Symbols.Tests/obj
 	rm -rf samples/MauiSampleApp/bin samples/MauiSampleApp/obj
 
 # Restore NuGet packages

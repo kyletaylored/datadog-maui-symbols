@@ -1,6 +1,6 @@
 # Datadog MAUI Sample App
 
-A minimal .NET MAUI application demonstrating the `Datadog.MAUI.SymbolsUpload` plugin for automatic symbol file upload to Datadog.
+A minimal .NET MAUI application demonstrating the `Datadog.MAUI.Symbols` plugin for automatic symbol file upload to Datadog.
 
 ## What This Demonstrates
 

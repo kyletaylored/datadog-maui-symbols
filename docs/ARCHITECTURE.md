@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the technical architecture of the Datadog.MAUI.SymbolsUpload plugin.
+This document describes the technical architecture of the Datadog.MAUI.Symbols plugin.
 
 ## Overview
 
@@ -112,7 +112,7 @@ Where `{site}` is typically `datadoghq.com` but can be customized for different 
 
 **Headers**:
 - `DD-API-KEY`: Datadog API key for authentication
-- `DD-EVP-ORIGIN`: Client identifier (`datadog-maui-symbols-upload`)
+- `DD-EVP-ORIGIN`: Client identifier (`datadog-maui-symbols`)
 - `DD-EVP-ORIGIN-VERSION`: Plugin version number
 
 **Multipart Parts**:
@@ -120,7 +120,7 @@ Where `{site}` is typically `datadoghq.com` but can be customized for different 
 1. **event** (application/json) - Symbol metadata
    ```json
    {
-     "cli_version": "datadog-maui-symbols-upload/0.1.0",
+     "cli_version": "datadog-maui-symbols/0.1.0",
      "type": "jvm_mapping_file",
      "service": "my-app",
      "version": "1.0.0",
@@ -132,7 +132,7 @@ Where `{site}` is typically `datadoghq.com` but can be customized for different 
    Or with build_id:
    ```json
    {
-     "cli_version": "datadog-maui-symbols-upload/0.1.0",
+     "cli_version": "datadog-maui-symbols/0.1.0",
      "type": "jvm_mapping_file",
      "build_id": "abc123def456",
      "platform": "android"

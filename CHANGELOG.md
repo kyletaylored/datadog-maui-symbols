@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial implementation of Datadog.MAUI.SymbolsUpload plugin
+
+- Initial implementation of Datadog.MAUI.Symbols plugin
 - Support for Android ProGuard/R8 mapping files
 - Support for iOS dSYM bundles
 - Support for Flutter symbol files
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration tests (7 tests)
 
 ### Features
+
 - No Node.js dependency - pure .NET implementation
 - Direct API communication with Datadog sourcemap intake
 - Automatic upload via MSBuild targets
@@ -34,7 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - TBD
 
 ### Added
+
 - Initial release (planned)
 
-[Unreleased]: https://github.com/DataDog/datadog-maui-symbols-upload/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/DataDog/datadog-maui-symbols-upload/releases/tag/v0.1.0
+[Unreleased]: https://github.com/kyletaylored/datadog-maui-symbols/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/kyletaylored/datadog-maui-symbols/releases/tag/v0.1.0

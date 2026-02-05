@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet package metadata -->
+    <!-- Personal namespace - will be replaced by official Datadog.MAUI.Symbols when officially supported -->
+    <PackageId>kyletaylored.Datadog.MAUI.Symbols</PackageId>
+    <!-- Version is set by CI from git tag (e.g., v0.1.0), defaults to 0.0.0-dev for local builds -->
+    <PackageVersion Condition="'$(PackageVersion)' == ''">0.0.0-dev</PackageVersion>
+    <Authors>Kyle Taylor</Authors>
+    <Description>Native .NET MSBuild plugin for uploading symbol files to Datadog from MAUI applications.</Description>
+    <Copyright>Copyright (c) 2024 Datadog, Inc.</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+
+    <!-- When official package is released, uncomment this to mark as deprecated:
+    <PackageDeprecationReasons>Legacy</PackageDeprecationReasons>
+    <PackageDeprecationAlternatePackageId>Datadog.MAUI.Symbols</PackageDeprecationAlternatePackageId>
+    <PackageDeprecationMessage>This package has been superseded by the official Datadog.MAUI.Symbols package. Please migrate to the official version. Migration only requires changing the PackageReference - no code changes needed.</PackageDeprecationMessage>
+    -->
+
+    <!-- URLs -->
+    <PackageProjectUrl>https://github.com/kyletaylored/datadog-maui-symbols</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/kyletaylored/datadog-maui-symbols</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Tags (space-delimited per NuGet spec) -->
+    <PackageTags>datadog symbols sourcemaps maui android ios dotnet</PackageTags>
+
+    <!-- Package content -->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>Initial release of Datadog.MAUI.Symbols - Native .NET MSBuild integration for uploading Android and iOS symbol files to Datadog.</PackageReleaseNotes>
+
+    <!-- Include build files in NuGet package -->
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+    <DevelopmentDependency>true</DevelopmentDependency>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="18.0.2" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <!-- Include .targets and .props files in NuGet package -->
+  <ItemGroup>
+    <None Include="build\*.props" Pack="true" PackagePath="build\" />
+    <None Include="build\Datadog.MAUI.Symbols.targets" Pack="true" PackagePath="build\" />
+    <None Include="build\Datadog.MAUI.Symbols.targets" Pack="true" PackagePath="buildTransitive\" />
+  </ItemGroup>
+
+  <!-- Include README and LICENSE in the package -->
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

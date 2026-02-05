@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide covers building, testing, and contributing to the Datadog.MAUI.SymbolsUpload plugin.
+This guide covers building, testing, and contributing to the Datadog.MAUI.Symbols plugin.
 
 ## Prerequisites
 
@@ -12,13 +12,13 @@ This guide covers building, testing, and contributing to the Datadog.MAUI.Symbol
 ## Project Structure
 
 ```
-Datadog.MAUI.SymbolsUpload/
-├── Datadog.MAUI.SymbolsUpload/          # Main plugin project
+Datadog.MAUI.Symbols/
+├── Datadog.MAUI.Symbols/          # Main plugin project
 │   ├── Core/                            # Core components (API client, locators, collectors)
 │   ├── Models/                          # Data models
 │   ├── Tasks/                           # MSBuild tasks
 │   └── build/                           # MSBuild .targets files
-├── Datadog.MAUI.SymbolsUpload.Tests/    # Unit and integration tests
+├── Datadog.MAUI.Symbols.Tests/    # Unit and integration tests
 ├── samples/MauiSampleApp/               # Sample MAUI application
 └── docs/                                # Additional documentation
 ```
@@ -73,10 +73,10 @@ If you prefer not to use Make:
 
 ```bash
 # Build plugin
-dotnet build Datadog.MAUI.SymbolsUpload/Datadog.MAUI.SymbolsUpload.csproj -c Release
+dotnet build Datadog.MAUI.Symbols/Datadog.MAUI.Symbols.csproj -c Release
 
 # Create package
-dotnet pack Datadog.MAUI.SymbolsUpload/Datadog.MAUI.SymbolsUpload.csproj -c Release
+dotnet pack Datadog.MAUI.Symbols/Datadog.MAUI.Symbols.csproj -c Release
 ```
 
 ### Testing
@@ -188,7 +188,7 @@ dotnet build -v:diag > build.log 2>&1
 ### Debugging with Sample App
 
 1. Set breakpoints in the plugin code
-2. Build the plugin: `dotnet build Datadog.MAUI.SymbolsUpload/Datadog.MAUI.SymbolsUpload.csproj`
+2. Build the plugin: `dotnet build Datadog.MAUI.Symbols/Datadog.MAUI.Symbols.csproj`
 3. Build sample app with plugin: `dotnet build samples/MauiSampleApp/MauiSampleApp.csproj`
 4. Check build output for task execution
 
@@ -206,7 +206,7 @@ dotnet build -v:diag > build.log 2>&1
 
 ## Release Process
 
-1. Update version in `Datadog.MAUI.SymbolsUpload.csproj`
+1. Update version in `Datadog.MAUI.Symbols.csproj`
 2. Update CHANGELOG.md with release notes
 3. Run full test suite: `make test`
 4. Create NuGet package: `make pack`
