@@ -1,0 +1,127 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Target .NET 9 for Android and iOS -->
+		<TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<RootNamespace>MauiSampleApp</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<!-- App Info -->
+		<ApplicationTitle>Datadog MAUI Sample</ApplicationTitle>
+		<ApplicationId>com.datadog.mauisample</ApplicationId>
+		<ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+
+		<!-- Platform Versions -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<!-- Android R8 Configuration (generates mapping files) -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<AndroidLinkMode>Full</AndroidLinkMode>
+		<AndroidLinkTool>r8</AndroidLinkTool>
+		<AndroidCreatePackagePerAbi>false</AndroidCreatePackagePerAbi>
+	</PropertyGroup>
+
+	<!-- iOS dSYM Configuration (generates debug symbol files) -->
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<MtouchDebugSymbols>true</MtouchDebugSymbols>
+		<GenerateDsymBundle>true</GenerateDsymBundle>
+	</PropertyGroup>
+
+	<!-- iOS Publishing Profile -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND $(TargetFramework.Contains('ios'))">
+		<CodesignKey>Apple Development</CodesignKey>
+		<CodesignProvision>Name of Your Provisioning Profile</CodesignProvision>
+		<DevelopmentTeam>YOUR_TEAM_ID</DevelopmentTeam>
+	</PropertyGroup>
+
+	<!-- Datadog Symbol Upload Configuration -->
+	<PropertyGroup>
+		<!-- Set via environment variable: DATADOG_API_KEY -->
+		<DatadogApiKey Condition="'$(DatadogApiKey)' == ''">$(DATADOG_API_KEY)</DatadogApiKey>
+
+		<!-- Skip upload if no API key provided -->
+		<DatadogSymbolUploadSkip Condition="'$(DatadogApiKey)' == ''">true</DatadogSymbolUploadSkip>
+
+		<!-- Service name and version -->
+		<DatadogServiceName>maui-sample-app</DatadogServiceName>
+		<DatadogVersion>$(ApplicationDisplayVersion)</DatadogVersion>
+		<DatadogVariant>$(Configuration)</DatadogVariant>
+
+		<!-- Optional: Datadog site (defaults to datadoghq.com) -->
+		<!-- <DatadogSite>datadoghq.com</DatadogSite> -->
+	</PropertyGroup>
+
+	<!-- Generate BuildInfo.cs with build configuration before compilation -->
+	<Target Name="GenerateBuildInfo" BeforeTargets="CoreCompile">
+		<!-- Generate build ID using the Datadog plugin task -->
+		<GenerateBuildIdTask Version="$(DatadogVersion)" Variant="$(DatadogVariant)" VersionCode="$(ApplicationVersion)">
+			<Output TaskParameter="BuildId" PropertyName="GeneratedBuildId" />
+		</GenerateBuildIdTask>
+
+		<PropertyGroup>
+			<BuildInfoPath>$(IntermediateOutputPath)BuildInfo.g.cs</BuildInfoPath>
+			<BuildInfoContent>// Auto-generated file - do not edit
+namespace MauiSampleApp%3B
+
+public static class BuildInfo
+{
+    public const string ServiceName = "$(DatadogServiceName)"%3B
+    public const string Version = "$(DatadogVersion)"%3B
+    public const string Variant = "$(DatadogVariant)"%3B
+    public const string Configuration = "$(Configuration)"%3B
+    public const string BuildId = "$(GeneratedBuildId)"%3B
+}
+			</BuildInfoContent>
+		</PropertyGroup>
+		<WriteLinesToFile File="$(BuildInfoPath)" Lines="$(BuildInfoContent)" Overwrite="true" />
+		<ItemGroup>
+			<Compile Include="$(BuildInfoPath)" />
+			<FileWrites Include="$(BuildInfoPath)" />
+		</ItemGroup>
+	</Target>
+
+	<ItemGroup>
+		<!-- App Icon -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+
+		<!-- Splash Screen -->
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+
+		<!-- Images -->
+		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
+
+		<!-- Custom Fonts -->
+		<MauiFont Include="Resources\Fonts\*" />
+
+		<!-- Raw Assets -->
+		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+	</ItemGroup>
+
+	<!-- Reference the Datadog.MAUI.SymbolsUpload plugin -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\Datadog.MAUI.SymbolsUpload\Datadog.MAUI.SymbolsUpload.csproj" ReferenceOutputAssembly="false" PrivateAssets="All" />
+	</ItemGroup>
+
+	<!-- Declare tasks for project reference (not needed when using NuGet package) -->
+	<UsingTask TaskName="Datadog.MAUI.SymbolsUpload.Tasks.GenerateBuildIdTask" AssemblyFile="..\..\Datadog.MAUI.SymbolsUpload\bin\$(Configuration)\netstandard2.0\Datadog.MAUI.SymbolsUpload.dll" />
+	<UsingTask TaskName="Datadog.MAUI.SymbolsUpload.Tasks.UploadSymbolsTask" AssemblyFile="..\..\Datadog.MAUI.SymbolsUpload\bin\$(Configuration)\netstandard2.0\Datadog.MAUI.SymbolsUpload.dll" />
+
+	<!-- Import plugin targets and props for project reference (not needed when using NuGet package) -->
+	<Import Project="..\..\Datadog.MAUI.SymbolsUpload\build\Datadog.MAUI.SymbolsUpload.props" />
+	<Import Project="..\..\Datadog.MAUI.SymbolsUpload\build\Datadog.MAUI.SymbolsUpload.targets" />
+
+</Project>

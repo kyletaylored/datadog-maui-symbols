@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/DataDog/datadog-maui-symbols-upload/blob/main/README.md
+    about: Read the documentation for usage and configuration
+  - name: Development Guide
+    url: https://github.com/DataDog/datadog-maui-symbols-upload/blob/main/DEVELOPMENT.md
+    about: Learn how to contribute to the project
+  - name: Architecture Documentation
+    url: https://github.com/DataDog/datadog-maui-symbols-upload/blob/main/docs/ARCHITECTURE.md
+    about: Technical architecture and implementation details

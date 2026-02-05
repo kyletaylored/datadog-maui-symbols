@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Default property values for Datadog symbol upload -->
+  <PropertyGroup>
+    <!-- Enable/disable symbol upload. Set to false to skip upload entirely. -->
+    <DatadogSymbolUploadEnabled Condition="'$(DatadogSymbolUploadEnabled)' == ''">true</DatadogSymbolUploadEnabled>
+
+    <!-- Skip upload in Debug builds by default -->
+    <DatadogSymbolUploadSkip Condition="'$(DatadogSymbolUploadSkip)' == '' AND '$(Configuration)' == 'Debug'">true</DatadogSymbolUploadSkip>
+    <DatadogSymbolUploadSkip Condition="'$(DatadogSymbolUploadSkip)' == ''">false</DatadogSymbolUploadSkip>
+
+    <!-- Datadog site (e.g., datadoghq.com, us5.datadoghq.com) -->
+    <DatadogSite Condition="'$(DatadogSite)' == ''">datadoghq.com</DatadogSite>
+
+    <!-- Include git metadata in uploads -->
+    <DatadogIncludeGitMetadata Condition="'$(DatadogIncludeGitMetadata)' == ''">true</DatadogIncludeGitMetadata>
+
+    <!-- Build variant/flavor - defaults to Configuration (e.g., Release, Debug) -->
+    <DatadogVariant Condition="'$(DatadogVariant)' == ''">$(Configuration)</DatadogVariant>
+
+    <!-- Service name - should be set by the consuming project -->
+    <!-- <DatadogServiceName></DatadogServiceName> -->
+
+    <!-- App version - defaults to AssemblyVersion or ApplicationVersion -->
+    <DatadogVersion Condition="'$(DatadogVersion)' == ''">$(ApplicationVersion)</DatadogVersion>
+    <DatadogVersion Condition="'$(DatadogVersion)' == ''">$(Version)</DatadogVersion>
+
+    <!-- API key - should be set via environment variable or project property -->
+    <!-- <DatadogApiKey></DatadogApiKey> -->
+
+    <!-- Build ID - optional, overrides service/version/variant requirement -->
+    <!-- <DatadogBuildId></DatadogBuildId> -->
+  </PropertyGroup>
+
+</Project>

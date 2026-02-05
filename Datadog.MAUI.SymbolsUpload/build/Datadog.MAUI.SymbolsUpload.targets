@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Define task assemblies -->
+  <UsingTask TaskName="Datadog.MAUI.SymbolsUpload.Tasks.UploadSymbolsTask"
+             AssemblyFile="$(MSBuildThisFileDirectory)\..\lib\netstandard2.0\Datadog.MAUI.SymbolsUpload.dll" />
+
+  <UsingTask TaskName="Datadog.MAUI.SymbolsUpload.Tasks.GenerateBuildIdTask"
+             AssemblyFile="$(MSBuildThisFileDirectory)\..\lib\netstandard2.0\Datadog.MAUI.SymbolsUpload.dll" />
+
+  <!-- Automatic symbol upload after publish (like the old plugin) -->
+  <Target Name="DatadogUploadSymbols" AfterTargets="Publish">
+    <Message Importance="high" Text="[Datadog] Symbol upload target triggered for $(TargetPlatformIdentifier)" />
+
+    <!-- Only run for Release builds by default -->
+    <PropertyGroup>
+      <_DatadogShouldRun Condition="'$(DatadogSymbolUploadEnabled)' == 'false'">false</_DatadogShouldRun>
+      <_DatadogShouldRun Condition="'$(_DatadogShouldRun)' == ''">true</_DatadogShouldRun>
+      <_DatadogShouldRun Condition="'$(Configuration)' != 'Release'">false</_DatadogShouldRun>
+    </PropertyGroup>
+
+    <!-- Early exit when disabled -->
+    <Message Condition="'$(_DatadogShouldRun)' != 'true'"
+             Importance="high"
+             Text="[Datadog] Symbol upload disabled (not Release build or DatadogSymbolUploadEnabled=false)" />
+
+    <!-- Message when API key is not set -->
+    <Message Condition="'$(_DatadogShouldRun)' == 'true' AND '$(DatadogApiKey)' == ''"
+             Importance="high"
+             Text="[Datadog] Symbol upload skipped (DATADOG_API_KEY not set)" />
+
+    <!-- Generate build ID for Android if not provided -->
+    <GenerateBuildIdTask
+      Condition="'$(TargetPlatformIdentifier)' == 'android' AND '$(_DatadogShouldRun)' == 'true' AND '$(DatadogBuildId)' == ''"
+      ApkPath="$(OutputPath)$(AssemblyName)-Signed.apk"
+      Version="$(DatadogVersion)"
+      Variant="$(DatadogVariant)"
+      VersionCode="$(AndroidVersionCode)">
+      <Output TaskParameter="BuildId" PropertyName="DatadogBuildId" />
+    </GenerateBuildIdTask>
+
+    <!-- Upload symbols - single task handles all platforms -->
+    <UploadSymbolsTask
+      Condition="'$(_DatadogShouldRun)' == 'true' AND '$(DatadogApiKey)' != ''"
+      ApiKey="$(DatadogApiKey)"
+      ServiceName="$(DatadogServiceName)"
+      Version="$(DatadogVersion)"
+      Variant="$(DatadogVariant)"
+      BuildId="$(DatadogBuildId)"
+      TargetPlatformIdentifier="$(TargetPlatformIdentifier)"
+      RuntimeIdentifier="$(RuntimeIdentifier)"
+      SymbolFilePath="$(DatadogSymbolFilePath)"
+      ProjectDirectory="$(MSBuildProjectDirectory)"
+      Site="$(DatadogSite)"
+      DisableGit="$(DatadogDisableGit)"
+      RepositoryUrl="$(DatadogRepositoryUrl)"
+      IncludeGitMetadata="$(DatadogIncludeGitMetadata)"
+      Skip="$(DatadogSymbolUploadSkip)"
+      DryRun="$(DatadogSymbolUploadDryRun)"
+      SkipApiKeyValidation="$(DatadogSkipApiKeyValidation)"
+      Verbose="$(DatadogVerbose)"
+      ContinueOnError="true" />
+  </Target>
+
+</Project>
