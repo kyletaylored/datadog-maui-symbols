@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Wrapper file for NuGet naming convention.
+  This imports the actual implementation file which uses the future official package name.
+  When Datadog releases the official package, users only need to change the PackageReference.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="Datadog.MAUI.Symbols.targets" />
+</Project>

@@ -45,9 +45,11 @@
 
   <!-- Include .targets and .props files in NuGet package -->
   <ItemGroup>
-    <None Include="build\*.props" Pack="true" PackagePath="build\" />
-    <None Include="build\Datadog.MAUI.Symbols.targets" Pack="true" PackagePath="build\" />
-    <None Include="build\Datadog.MAUI.Symbols.targets" Pack="true" PackagePath="buildTransitive\" />
+    <!-- Include all .props and .targets files (both wrapper and implementation) in build/ -->
+    <None Include="build\*.props" Pack="true" PackagePath="build" />
+    <None Include="build\*.targets" Pack="true" PackagePath="build" />
+    <!-- Also include in buildTransitive/ for transitive dependencies -->
+    <None Include="build\*.targets" Pack="true" PackagePath="buildTransitive" />
   </ItemGroup>
 
   <!-- Include README and LICENSE in the package -->
