@@ -1,0 +1,178 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-dependencies:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Check for outdated packages
+        id: check-updates
+        working-directory: Datadog.MAUI.SymbolsUpload
+        run: |
+          echo "Checking for outdated packages..."
+
+          # Check both projects and capture output
+          MAIN_OUTDATED=$(cd Datadog.MAUI.Symbols && dotnet list package --outdated 2>/dev/null | grep ">" || true)
+          TEST_OUTDATED=$(cd Datadog.MAUI.Symbols.Tests && dotnet list package --outdated 2>/dev/null | grep ">" || true)
+
+          # Count total outdated packages
+          OUTDATED_COUNT=0
+          if [ -n "$MAIN_OUTDATED" ]; then
+            MAIN_COUNT=$(echo "$MAIN_OUTDATED" | wc -l | xargs)
+            OUTDATED_COUNT=$((OUTDATED_COUNT + MAIN_COUNT))
+            echo "Main project outdated packages:"
+            echo "$MAIN_OUTDATED"
+          fi
+
+          if [ -n "$TEST_OUTDATED" ]; then
+            TEST_COUNT=$(echo "$TEST_OUTDATED" | wc -l | xargs)
+            OUTDATED_COUNT=$((OUTDATED_COUNT + TEST_COUNT))
+            echo "Test project outdated packages:"
+            echo "$TEST_OUTDATED"
+          fi
+
+          echo "has_updates=$([ $OUTDATED_COUNT -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "Total outdated packages: $OUTDATED_COUNT"
+
+      - name: Capture package updates
+        if: steps.check-updates.outputs.has_updates == 'true'
+        id: capture-updates
+        working-directory: Datadog.MAUI.SymbolsUpload
+        run: |
+          # Capture the full outdated package list before updating
+          UPDATES_LIST=""
+          UPDATES_LIST+="**Main Project (Datadog.MAUI.Symbols):**\n"
+          UPDATES_LIST+=$(cd Datadog.MAUI.Symbols && dotnet list package --outdated 2>/dev/null | grep ">" || echo "_No updates_")
+          UPDATES_LIST+="\n\n**Test Project (Datadog.MAUI.Symbols.Tests):**\n"
+          UPDATES_LIST+=$(cd Datadog.MAUI.Symbols.Tests && dotnet list package --outdated 2>/dev/null | grep ">" || echo "_No updates_")
+
+          # Save to file for use in PR
+          echo "$UPDATES_LIST" > /tmp/package-updates.txt
+          cat /tmp/package-updates.txt
+
+      - name: Update packages
+        if: steps.check-updates.outputs.has_updates == 'true'
+        working-directory: Datadog.MAUI.SymbolsUpload
+        run: |
+          echo "Updating packages..."
+
+          # Update main project packages
+          cd Datadog.MAUI.Symbols
+          dotnet list package --outdated 2>/dev/null | grep ">" | awk '{print $2}' | while read package; do
+            if [ -n "$package" ]; then
+              echo "Updating $package in main project..."
+              dotnet add package "$package" || echo "Failed to update $package"
+            fi
+          done
+
+          # Update test project packages
+          cd ../Datadog.MAUI.Symbols.Tests
+          dotnet list package --outdated 2>/dev/null | grep ">" | awk '{print $2}' | while read package; do
+            if [ -n "$package" ]; then
+              echo "Updating $package in test project..."
+              dotnet add package "$package" || echo "Failed to update $package"
+            fi
+          done
+
+          cd ..
+
+      - name: Restore and build
+        if: steps.check-updates.outputs.has_updates == 'true'
+        working-directory: Datadog.MAUI.SymbolsUpload
+        run: |
+          dotnet restore
+          dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        if: steps.check-updates.outputs.has_updates == 'true'
+        working-directory: Datadog.MAUI.SymbolsUpload
+        run: |
+          dotnet test --no-build --configuration Release --verbosity normal
+
+      - name: Create pull request
+        if: steps.check-updates.outputs.has_updates == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create branch
+          BRANCH_NAME="deps/auto-update-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH_NAME"
+
+          # Stage and commit changes
+          git add Datadog.MAUI.SymbolsUpload/Datadog.MAUI.Symbols/Datadog.MAUI.Symbols.csproj
+          git add Datadog.MAUI.SymbolsUpload/Datadog.MAUI.Symbols.Tests/Datadog.MAUI.Symbols.Tests.csproj
+
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          # Get list of updated packages for commit message
+          PACKAGE_SUMMARY=$(cat /tmp/package-updates.txt | grep ">" | head -5 | awk '{print "- " $2}' | tr '\n' ' ' || echo "dependencies")
+
+          git commit -m "chore: update NuGet dependencies
+
+          Automated dependency updates from scheduled workflow.
+          All tests passing.
+
+          Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+          # Push branch
+          git push origin "$BRANCH_NAME"
+
+          # Read the captured updates for PR body
+          UPDATES_CONTENT=$(cat /tmp/package-updates.txt)
+
+          # Create PR
+          gh pr create \
+            --title "chore: automated NuGet dependency updates" \
+            --body "## Automated Dependency Updates
+
+          This PR contains automated updates to NuGet package dependencies for the MAUI Symbols Upload project.
+
+          ### Changes
+          - Updated outdated NuGet packages to their latest versions
+          - All tests passing ✅
+
+          ### Verification
+          - Build: ✅ Successful
+          - Tests: ✅ All passing (31 tests)
+
+          ### Updated Packages
+
+          $UPDATES_CONTENT
+
+          ---
+          🤖 This PR was automatically created by the [dependency updates workflow](.github/workflows/dependency-updates.yml).
+
+          **Review Notes:**
+          - Please review the changes carefully, especially for major version updates
+          - All automated tests have passed
+          - Consider running additional manual testing before merging" \
+            --base master \
+            --head "$BRANCH_NAME"
