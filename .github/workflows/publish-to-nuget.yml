@@ -17,9 +17,96 @@ env:
   NUGET_SOURCE: 'https://api.nuget.org/v3/index.json'
 
 jobs:
+  # Strict validation - tag and release must exist
+  validate-tag-exists:
+    name: Validate Tag and Release
+    runs-on: ubuntu-latest
+    outputs:
+      tag_valid: ${{ steps.check-tag.outputs.valid }}
+      release_exists: ${{ steps.check-release.outputs.exists }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Fetch all tags
+
+      - name: List available release tags
+        run: |
+          echo "=== Available Release Tags (last 10) ==="
+          git tag --sort=-version:refname | head -10
+          echo ""
+          echo "=== Validating Input ==="
+          echo "Requested tag: ${{ github.event.inputs.release_tag }}"
+
+      - name: Validate tag exists
+        id: check-tag
+        run: |
+          if git rev-parse "${{ github.event.inputs.release_tag }}" >/dev/null 2>&1; then
+            echo "✅ Tag exists: ${{ github.event.inputs.release_tag }}"
+            echo "valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ ERROR: Tag does not exist: ${{ github.event.inputs.release_tag }}"
+            echo ""
+            echo "Available tags:"
+            git tag --sort=-version:refname | head -20
+            echo ""
+            echo "Please use an existing tag from the list above."
+            echo "valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Validate GitHub release exists
+        id: check-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ github.event.inputs.release_tag }}" >/dev/null 2>&1; then
+            echo "✅ GitHub release exists for tag: ${{ github.event.inputs.release_tag }}"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ ERROR: No GitHub release found for tag: ${{ github.event.inputs.release_tag }}"
+            echo ""
+            echo "This workflow requires a GitHub release with .nupkg files."
+            echo "Please create a release for this tag first using the build-release workflow."
+            echo ""
+            echo "Available releases:"
+            gh release list --limit 10
+            echo "exists=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Validate release has packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking for .nupkg files in release..."
+          ASSET_COUNT=$(gh release view "${{ github.event.inputs.release_tag }}" --json assets --jq '.assets | map(select(.name | endswith(".nupkg"))) | length')
+
+          if [ "$ASSET_COUNT" -gt 0 ]; then
+            echo "✅ Found $ASSET_COUNT package(s) in release"
+            echo ""
+            echo "Packages to be published:"
+            gh release view "${{ github.event.inputs.release_tag }}" --json assets --jq '.assets[] | select(.name | endswith(".nupkg")) | .name'
+          else
+            echo "❌ ERROR: No .nupkg files found in release"
+            echo ""
+            echo "Please ensure the release was created with package files."
+            exit 1
+          fi
+
+      - name: Create validation summary
+        run: |
+          echo "# ✅ Tag and Release Validation Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: ${{ github.event.inputs.release_tag }} exists" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release**: Found with packages" >> $GITHUB_STEP_SUMMARY
+          echo "- **Mode**: ${{ github.event.inputs.dry_run == 'true' && '🧪 Dry Run' || '🚀 Live Publish' }}" >> $GITHUB_STEP_SUMMARY
+
   # Validate version before proceeding
   validate-version:
     name: Validate Version
+    needs: validate-tag-exists
     uses: ./.github/workflows/validate-version.yml
     with:
       release_tag: ${{ github.event.inputs.release_tag }}
@@ -249,6 +336,104 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Packages will be available on NuGet.org within 15-30 minutes." >> $GITHUB_STEP_SUMMARY
 
+  # Publish to GitHub Package Registry
+  publish-to-github:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    needs: validate-packages
+    if: github.event.inputs.dry_run == 'false'
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v7
+        with:
+          name: release-packages-to-publish
+          path: ./packages
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Publish packages to GitHub Packages
+        run: |
+          echo "Publishing packages to GitHub Package Registry..."
+          echo ""
+
+          SUCCESS=0
+          FAILED=0
+          SKIPPED=0
+
+          for package in ./packages/*.nupkg; do
+            pkg_name=$(basename "$package")
+            echo "----------------------------------------"
+            echo "Publishing: $pkg_name"
+
+            if dotnet nuget push "$package" \
+              --api-key ${{ secrets.GITHUB_TOKEN }} \
+              --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \
+              --skip-duplicate \
+              --timeout 300; then
+              echo "Published: $pkg_name"
+              SUCCESS=$((SUCCESS + 1))
+            else
+              EXIT_CODE=$?
+              if [ $EXIT_CODE -eq 0 ]; then
+                echo "Skipped (already exists): $pkg_name"
+                SKIPPED=$((SKIPPED + 1))
+              else
+                echo "Failed: $pkg_name (exit code: $EXIT_CODE)"
+                FAILED=$((FAILED + 1))
+              fi
+            fi
+            echo ""
+          done
+
+          echo "========================================"
+          echo "         PUBLISH SUMMARY"
+          echo "========================================"
+          echo "Successfully Published: $SUCCESS"
+          echo "Skipped (duplicates):  $SKIPPED"
+          echo "Failed:                 $FAILED"
+          echo "========================================"
+          echo ""
+
+          if [ $FAILED -gt 0 ]; then
+            echo "Warning: Some packages failed to publish to GitHub Packages"
+            echo "This is non-fatal - packages may still be available on NuGet.org"
+          else
+            echo "GitHub Packages publish operation completed successfully!"
+          fi
+
+      - name: Create GitHub Packages publish summary
+        run: |
+          echo "# GitHub Packages Publish Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Published from Release" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Tag**: ${{ github.event.inputs.release_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Packages**: $(ls -1 ./packages/*.nupkg | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Links" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Package](https://github.com/${{ github.repository }}/pkgs/nuget/kyletaylored.Datadog.MAUI.Symbols)" >> $GITHUB_STEP_SUMMARY
+          echo "- [All Packages](https://github.com/${{ github.repository_owner }}?tab=packages&repo_name=${{ github.event.repository.name }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Release](${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.event.inputs.release_tag }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Using GitHub Packages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To install from GitHub Packages, add this source:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "dotnet nuget add source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --name github \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --username ${{ github.repository_owner }} \\" >> $GITHUB_STEP_SUMMARY
+          echo "  --password <YOUR_GITHUB_TOKEN>" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
   # Dry run summary
   dry-run-summary:
     name: Dry Run Summary
@@ -267,9 +452,12 @@ jobs:
         run: |
           echo "# 🧪 Dry Run Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Validation Passed" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Validation Passed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All packages passed validation checks." >> $GITHUB_STEP_SUMMARY
+          echo "All validation checks passed:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tag exists and is valid" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ GitHub release found with packages" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Package structure validated" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 📦 Packages Ready for Publishing" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -285,5 +473,10 @@ jobs:
           echo "## 📤 To Publish for Real" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "1. Re-run this workflow" >> $GITHUB_STEP_SUMMARY
-          echo "2. **Uncheck** 'Dry run' option" >> $GITHUB_STEP_SUMMARY
-          echo "3. Packages will be published to NuGet.org" >> $GITHUB_STEP_SUMMARY
+          echo "2. Use the **same tag**: \`${{ github.event.inputs.release_tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Uncheck** 'Dry run' option" >> $GITHUB_STEP_SUMMARY
+          echo "4. Packages will be published to:" >> $GITHUB_STEP_SUMMARY
+          echo "   - NuGet.org" >> $GITHUB_STEP_SUMMARY
+          echo "   - GitHub Packages" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> **Note**: Only existing release tags can be used. Free-form version input is not allowed." >> $GITHUB_STEP_SUMMARY
